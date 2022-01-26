@@ -16,9 +16,9 @@ MainWindow::~MainWindow()
 
 
 void MainWindow::on_actionOpen_triggered(){
-    std::string fileName = QFileDialog::getOpenFileName(this, tr("Open a binary")).toStdString();
-    Binary binary;
-    load_binary(fileName, &binary, Binary::BIN_TYPE_AUTO);
+    auto loader = BinaryLoader::getBinaryLoader();
+    QString fname = QFileDialog::getOpenFileName(this, "Choose a binary file");
+    loader->load_binary(fname, Binary::BIN_TYPE_AUTO);
 }
 
 void MainWindow::on_actionAbout_triggered() {
