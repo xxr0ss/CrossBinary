@@ -14,12 +14,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
-set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
+set(INCLUDE_ROOT_DIR "${CMAKE_SOURCE_DIR}/include")
 
-include_directories(${INCLUDE_DIR})
-configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${INCLUDE_DIR}/config.h")
+configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${INCLUDE_ROOT_DIR}/config.h")
 
-FILE(GLOB HEADER_FILES "${INCLUDE_DIR}/*.h")
+include_directories(${INCLUDE_ROOT_DIR} "${INCLUDE_ROOT_DIR}/ui")
+
+FILE(GLOB HEADER_FILES "${INCLUDE_ROOT_DIR}/*.h" "${INCLUDE_ROOT_DIR}/ui/*.h")
 FILE(GLOB SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.c" "${CMAKE_SOURCE_DIR}/src/*.cpp")
 FILE(GLOB UI_FILES "${CMAKE_SOURCE_DIR}/src/UI/*.ui")
 
