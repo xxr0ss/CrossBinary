@@ -16,6 +16,9 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+signals:
+    void binary_loaded();
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -23,6 +26,7 @@ public:
 private slots:
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
+    void output_load_info();
 
 private:
     Ui::MainWindow *ui;

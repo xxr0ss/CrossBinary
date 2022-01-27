@@ -24,6 +24,10 @@ public:
 
     int load_binary(QString &fname, Binary::BinaryType type);
     void unload_binary();
+
+private:
+    void parse_pe();
+    void parse_elf();
 };
 
 #endif /* LOADER_H */

@@ -4,7 +4,11 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include "elf.h"
+#include <Windows.h>
 
+typedef uint64_t address, offset;
+typedef uint8_t BYTE, *PBYTE;
 
 class Binary;
 class Section;
@@ -23,7 +27,7 @@ public:
 
     SymbolType type;
     std::string name;
-    uint64_t addr;
+    address addr;
 };
 
 class Section
@@ -38,12 +42,12 @@ public:
 
     Section() : binary(NULL), type(SEC_TYPE_NONE), vma(0), size(0), bytes(NULL) {}
 
-    bool contains(uint64_t addr) { return (addr >= vma) && (addr - vma < size); }
+    bool contains(address addr) { return (addr >= vma) && (addr - vma < size); }
 
     Binary *binary;
     std::string name;
     SectionType type;
-    uint64_t vma;
+    address vma;
     uint64_t size;
     uint8_t *bytes;
 };
@@ -65,32 +69,51 @@ public:
     };
 
     Binary() : type(BIN_TYPE_AUTO), arch(ARCH_NONE), bits(0), entry(0), bytes(nullptr) {}
+    Binary(BinaryType type, std::string filename, uint8_t *bytes) : type(type), filename(filename), bytes(bytes) {}
     ~Binary()
     {
-        if (bytes){
+        if (bytes)
+        {
             free(bytes);
             bytes = nullptr;
         }
     }
 
-    Section *get_text_section()
-    {
-        for (auto &s : sections)
-            if (s.name == ".text")
-                return &s;
-        return NULL;
-    }
+    /*
+        read information from bytes, fill the rest uninitialized fields.
+        and initialize other stuff in derived object according to the type
+        return int to indicate the parsing result
+    */
+    virtual int parse_bytes() { return 0; };
 
     std::string filename;
     BinaryType type;
-    std::string type_str;
     BinaryArch arch;
-    std::string arch_str;
     unsigned bits;
-    uint64_t entry;
+    address entry;
     std::vector<Section> sections;
     std::vector<Symbol> symbols;
     uint8_t *bytes;
+};
+
+class PE_Binary : public Binary
+{
+public:
+    PE_Binary(std::string filename, uint8_t *bytes)
+        : Binary(Binary::BinaryType::BIN_TYPE_PE, filename, bytes){};
+    ~PE_Binary();
+
+    int parse_bytes() override;
+};
+
+class ELF_Binary : public Binary
+{
+public:
+    ELF_Binary(std::string filename, uint8_t *bytes)
+        : Binary(Binary::BinaryType::BIN_TYPE_ELF, filename, bytes){};
+    ~ELF_Binary();
+
+    int parse_bytes() override;
 };
 
 #endif /* BINARY_H */
