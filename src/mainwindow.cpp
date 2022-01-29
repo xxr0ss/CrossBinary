@@ -1,11 +1,17 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+      ui(new Ui::MainWindow),
+      dock_output_window(nullptr)
 {
     ui->setupUi(this);
+
+    init_widgets();
+    output_handler = OutputHandler::getOutputHandler();
+    output_handler->attach_to_window((OutputWindow*)dock_output_window->widget());
     connect(this, SIGNAL(binary_loaded()), this, SLOT(output_load_info()));
 }
 
@@ -14,15 +20,24 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::init_widgets()
+{
+    dock_output_window = new QDockWidget("Output", this);
+    dock_output_window->setAllowedAreas(Qt::AllDockWidgetAreas);
+    dock_output_window->setWidget(new OutputWindow(this));
+    addDockWidget(Qt::TopDockWidgetArea, dock_output_window);
+}
+
 void MainWindow::on_actionOpen_triggered()
 {
     auto loader = BinaryLoader::getBinaryLoader();
     QString fname = QFileDialog::getOpenFileName(this, "Choose a binary file");
 
-    if(fname.isNull())
+    if (fname.isNull())
         return;
 
-    if(loader->load_binary(fname, Binary::BIN_TYPE_AUTO) != -1){
+    if (loader->load_binary(fname, Binary::BIN_TYPE_AUTO) != -1)
+    {
         emit binary_loaded();
     }
 }
@@ -38,7 +53,8 @@ void MainWindow::output_load_info()
     using namespace std;
     auto loader = BinaryLoader::getBinaryLoader();
     auto &bin = loader->binary;
-    cout << "filename: " << bin->filename << endl;
+
+    output_handler->print(QString("fielname: %1").arg(QString::fromStdString(bin->filename)));
 
     string type_str;
     switch (bin->type)
@@ -53,10 +69,10 @@ void MainWindow::output_load_info()
         type_str = "RAW";
     }
 
-    cout << "type: " << type_str << endl;
+    output_handler->print(QString("type: %1").arg(QString::fromStdString(type_str)));
 
-    if (bin->bits == 32)
-        printf("entry: 0x%I32X\n", (unsigned int)bin->entry);
-    else if (bin->bits == 64)
-        printf("entry: 0x%I64X\n", bin->entry);
+    output_handler->print(QString("bits: %1").arg(bin->bits));
+
+    output_handler->print(QString("entry: 0x%1\n").arg(
+        (qulonglong)(bin->entry), (int)bin->bits/8, 16, QChar('0')));
 }
